@@ -58,6 +58,20 @@ namespace Microsoft.Azure.Devices.Provisioning.Client.Samples
             Console.WriteLine($"Testing the provisioned device with IoT Hub...");
             using var iotClient = DeviceClient.Create(result.AssignedHub, auth, _parameters.TransportType);
 
+            // set retry policy
+            const int retryCount = 4;
+            const int minBackOffInMSec = 200;
+            const int maxBackOffInSec = 4;
+            const int deltaBackOffInMSec = 100;
+
+            iotClient.SetRetryPolicy(
+                new ExponentialBackoff(
+                    retryCount,
+                    TimeSpan.FromMilliseconds(minBackOffInMSec),
+                    TimeSpan.FromSeconds(maxBackOffInSec),
+                    TimeSpan.FromMilliseconds(deltaBackOffInMSec)));
+
+
             Console.WriteLine("Sending a telemetry message...");
             using var message = new Message(Encoding.UTF8.GetBytes("TestMessage"));
             await iotClient.SendEventAsync(message);
